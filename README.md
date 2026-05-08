@@ -10,12 +10,12 @@
 
 ## 功能介绍
 
-- ✅ 批量给选中的组件添加自定义字段
+- ✅ 批量给选中的组件描述中添加自定义字段
 - ✅ 新字段始终写入 Description 的 **第一行**，原有描述整体下移，不会被覆盖
 - ✅ 仅作用于 `Component` 与 `Component Set`，避免误改普通图层
 - ✅ 应用后插件窗口不会自动关闭，可连续对不同选区执行
 - ✅ **批量导出 PNG**：文件名取自组件描述中的 `ID`，多张自动打包为 `tag2json-export.zip`
-- ✅ **导出 JSON 映射**：一键导出 `{ID: Link}` 结构到 `tag2json-export.json`
+- ✅ **导出 JSON 映射**：一键导出 `{ID: Link}` 结构到 `tag2json-dict.json`
 - ✅ **按钮状态与选区联动**：未选中时两个导出按钮与“立即应用”按钮自动禁用，选中后自动启用
 
 ## 适用场景
@@ -57,7 +57,7 @@
 
 1. 选中一个或多个组件 / 组件集。
 2. 点击「导出为 JSON」**导出为 JSON** 按钮。
-3. 插件读取每个组件描述中的 `ID` 与 Component configuration → Link 第一项，输出 `{ID: Link}` 映射，下载为 `tag2json-export.json`。
+3. 插件读取每个组件描述中的 `ID` 与 Component configuration → Link 第一项，输出 `{ID: Link}` 映射，下载为 `tag2json-dict.json`。
 
 ## 行为说明
 
@@ -94,7 +94,7 @@
 
 1. 在画布上选中一个或多个组件 / 组件集。
 2. 点击插件面板的 **导出为 JSON**。
-3. 插件会读取每个组件 Description 中的 `ID：xxx`（中英文冒号均可），并读取 **Component configuration → Link** 第一项作为对应链接，以 `{ ID: Link }` 形式生成 JSON 并下载（默认文件名 `tag2json-export.json`）。
+3. 插件会读取每个组件 Description 中的 `ID：xxx`（中英文冒号均可），并读取 **Component configuration → Link** 第一项作为对应链接，以 `{ ID: Link }` 形式生成 JSON 并下载（默认文件名 `tag2json-dict.json`）。
 
 示例输出：
 

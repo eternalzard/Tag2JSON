@@ -193,7 +193,7 @@ async function handleExportJson() {
 
   figma.ui.postMessage({
     type: 'download-json',
-    fileName: 'tag2json-export.json',
+    fileName: 'tag2json-dict.json',
     content: jsonStr
   });
 

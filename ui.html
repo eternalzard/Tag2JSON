@@ -92,7 +92,7 @@
   <body>
     <div class="title">添加描述</div>
     <div class="desc">输入的内容添加至组件描述第一行，已有描述会放到第二行</div>
-    <input id="fieldInput" placeholder="例如：@owner=design-system" />
+    <input id="fieldInput" placeholder="例 ID:design-system" />
     <button id="applyBtn" disabled>立即应用</button>
 
     <hr />
@@ -357,7 +357,7 @@
         } else if (msg.type === 'download-json') {
           try {
             const blob = new Blob([msg.content || ''], { type: 'application/json' });
-            downloadBlob(msg.fileName || 'tag2json-export.json', blob);
+            downloadBlob(msg.fileName || 'tag2json-dict.json', blob);
           } catch (err) {
             console.error('JSON 下载失败:', err);
           } finally {

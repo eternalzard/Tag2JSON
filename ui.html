@@ -47,6 +47,9 @@
       button.secondary {
         background: #2c2c2c;
       }
+      button.purple {
+        background: #7668F9;
+      }
       button:disabled {
         opacity: 0.6;
         cursor: not-allowed;
@@ -54,63 +57,95 @@
       hr {
         border: none;
         border-top: 1px solid #eee;
-        margin: 16px 0 12px;
+        margin: 20px 0;
       }
       code {
         background: #f3f3f3;
         padding: 0 4px;
         border-radius: 3px;
       }
-      .version {
+      .footer {
         position: fixed;
-        right: 12px;
-        bottom: 8px;
+        left: 16px;
+        right: 16px;
+        bottom: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        pointer-events: none;
+      }
+      .footer .tip {
+        font-size: 12px;
+        line-height: 1.4;
+        color: #FF7112;
+        margin: 0;
+      }
+      .footer .version {
         font-size: 12px;
         font-weight: 400;
         color: #CCCCCC;
-        pointer-events: none;
+        white-space: nowrap;
       }
     </style>
   </head>
   <body>
-    <div class="title">给选中组件 Description 首行添加自定义字段</div>
-    <div class="desc">输入内容会被加到 Description 第一行前面。仅处理选中的组件/组件集。</div>
+    <div class="title">添加描述</div>
+    <div class="desc">输入的内容添加至组件描述第一行，已有描述会放到第二行</div>
     <input id="fieldInput" placeholder="例如：@owner=design-system" />
     <button id="applyBtn" disabled>立即应用</button>
 
     <hr />
 
-    <div class="title">导出选中组件为 PNG（1x，打包 ZIP）</div>
-    <div class="desc">读取每个组件 Description 中的 <code>ID：xxx</code> 作为文件名导出 PNG，多张图片会打包成一个 ZIP 一次下载。未找到 ID 时使用组件名兜底。</div>
-    <button id="exportBtn" class="secondary" disabled>导出选中组件</button>
+    <div class="title">导出为PNG</div>
+    <div class="desc">以组件描述中的ID作为文件名，多张自动打包为ZIP下载</div>
+    <button id="exportBtn" class="secondary" disabled>导出为 PNG</button>
 
-    <div id="selectionTip" class="desc" style="margin-top: 10px; color: #FF7112;">
-      请先在画布上选中至少一个组件 / 组件集
+    <hr />
+
+    <div class="title">导出为JSON</div>
+    <div class="desc">输出映射关系JSON文件，ID取自组件描述中的ID，外链取自组件配置中的Link</div>
+    <button id="exportJsonBtn" class="purple" disabled>导出为 JSON</button>
+
+    <div class="footer">
+      <div id="selectionTip" class="tip">请先在画布上选中至少一个组件 / 组件集</div>
+      <div class="version">v1.3.0</div>
     </div>
-
-    <div class="version">v1.2.0</div>
 
     <script>
       const input = document.getElementById('fieldInput');
       const applyBtn = document.getElementById('applyBtn');
       const exportBtn = document.getElementById('exportBtn');
+      const exportJsonBtn = document.getElementById('exportJsonBtn');
       const selectionTip = document.getElementById('selectionTip');
 
       // 选中的有效组件数量（由 code.js 通过 selection-changed 推送）
       let selectionCount = 0;
       // 是否正在导出（导出期间即便选区变化也保持禁用 + 文案）
       let isExporting = false;
+      // 当前正在执行的导出类型：'png' | 'json' | null
+      let exportingType = null;
 
       function refreshButtons() {
         const hasSelection = selectionCount > 0;
         applyBtn.disabled = !hasSelection;
 
-        if (isExporting) {
+        // 导出 PNG 按钮
+        if (isExporting && exportingType === 'png') {
           exportBtn.disabled = true;
           exportBtn.textContent = '正在导出...';
         } else {
-          exportBtn.disabled = !hasSelection;
-          exportBtn.textContent = '导出选中组件';
+          exportBtn.disabled = !hasSelection || isExporting;
+          exportBtn.textContent = '导出为 PNG';
+        }
+
+        // 导出 JSON 按钮
+        if (isExporting && exportingType === 'json') {
+          exportJsonBtn.disabled = true;
+          exportJsonBtn.textContent = '正在导出...';
+        } else {
+          exportJsonBtn.disabled = !hasSelection || isExporting;
+          exportJsonBtn.textContent = '导出为 JSON';
         }
 
         if (hasSelection) {
@@ -136,9 +171,21 @@
       exportBtn.onclick = () => {
         if (exportBtn.disabled) return;
         isExporting = true;
+        exportingType = 'png';
         refreshButtons();
         parent.postMessage(
           { pluginMessage: { type: 'export-selection' } },
+          '*'
+        );
+      };
+
+      exportJsonBtn.onclick = () => {
+        if (exportJsonBtn.disabled) return;
+        isExporting = true;
+        exportingType = 'json';
+        refreshButtons();
+        parent.postMessage(
+          { pluginMessage: { type: 'export-json' } },
           '*'
         );
       };
@@ -275,6 +322,7 @@
 
       function resetExportBtn() {
         isExporting = false;
+        exportingType = null;
         refreshButtons();
       }
 
@@ -303,6 +351,15 @@
             }
           } catch (err) {
             console.error('打包/下载失败:', err);
+          } finally {
+            resetExportBtn();
+          }
+        } else if (msg.type === 'download-json') {
+          try {
+            const blob = new Blob([msg.content || ''], { type: 'application/json' });
+            downloadBlob(msg.fileName || 'tag2json-export.json', blob);
+          } catch (err) {
+            console.error('JSON 下载失败:', err);
           } finally {
             resetExportBtn();
           }

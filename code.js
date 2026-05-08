@@ -1,4 +1,4 @@
-figma.showUI(__html__, { width: 360, height: 360 });
+figma.showUI(__html__, { width: 360, height: 480 });
 
 function isTargetNode(node) {
   return node.type === 'COMPONENT' || node.type === 'COMPONENT_SET';
@@ -146,6 +146,65 @@ async function handleExportSelection() {
   figma.notify(tip);
 }
 
+async function handleExportJson() {
+  const selected = figma.currentPage.selection;
+  const targets = selected.filter(isTargetNode);
+
+  if (targets.length === 0) {
+    figma.notify('请先选中至少一个组件或组件集');
+    figma.ui.postMessage({ type: 'export-finished' });
+    return;
+  }
+
+  const result = {};
+  const usedKeys = new Set();
+  let missingIdCount = 0;
+  let missingLinkCount = 0;
+
+  for (const node of targets) {
+    const description = 'description' in node ? node.description : '';
+    let id = extractIdFromDescription(description);
+
+    if (!id) {
+      missingIdCount += 1;
+      id = node.name || 'untitled';
+    }
+
+    // 同一 key 已存在时追加 -2、-3 后缀，避免静默覆盖
+    let key = id;
+    let dupIndex = 1;
+    while (usedKeys.has(key)) {
+      dupIndex += 1;
+      key = `${id}-${dupIndex}`;
+    }
+    usedKeys.add(key);
+
+    // documentationLinks：Component configuration 面板中的 Link
+    const links = ('documentationLinks' in node && Array.isArray(node.documentationLinks))
+      ? node.documentationLinks
+      : [];
+    const firstLink = links.length > 0 && links[0] ? (links[0].uri || '') : '';
+    if (!firstLink) missingLinkCount += 1;
+
+    result[key] = firstLink;
+  }
+
+  const jsonStr = JSON.stringify(result, null, 2);
+
+  figma.ui.postMessage({
+    type: 'download-json',
+    fileName: 'tag2json-export.json',
+    content: jsonStr
+  });
+
+  let tip = `已导出 ${Object.keys(result).length} 个组件的 JSON`;
+  const extras = [];
+  if (missingIdCount > 0) extras.push(`${missingIdCount} 个缺少 ID，使用节点名兜底`);
+  if (missingLinkCount > 0) extras.push(`${missingLinkCount} 个未设置 Link`);
+  if (extras.length > 0) tip += `（${extras.join('；')}）`;
+  figma.notify(tip);
+}
+
 figma.ui.onmessage = async (msg) => {
   if (!msg || !msg.type) return;
 
@@ -156,6 +215,11 @@ figma.ui.onmessage = async (msg) => {
 
   if (msg.type === 'export-selection') {
     await handleExportSelection();
+    return;
+  }
+
+  if (msg.type === 'export-json') {
+    await handleExportJson();
     return;
   }
 };

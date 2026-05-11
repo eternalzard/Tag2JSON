@@ -1,4 +1,4 @@
-<img width="1920" height="1080" alt="Cover" src="https://github.com/user-attachments/assets/7ff2624d-74d7-4f1f-bfe8-1bb8c77c239f" />
+<img width="1920" height="1080" alt="Cover" src="https://github.com/user-attachments/assets/2ed67083-17c8-435c-8700-0bc652e25b92" />
 
 # Tag2JSON
 
